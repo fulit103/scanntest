@@ -20,7 +20,7 @@ func InfoDomainEndPoint(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		if d.State == "R" {
 			d.State = "P"
-			domainDB.SaveOrUpdate(d, true)
+			domainDB.Update(d, []string{"state"})
 			go scanner.CallScannDomain(d)
 		} else {
 			fmt.Println("Ya esta ejecutandose el proceso")
@@ -42,12 +42,10 @@ func InfoDomainEndPoint(w http.ResponseWriter, r *http.Request) {
 // ListDomainsEndPoint listar dominios consultados: paso 2
 func ListDomainsEndPoint(w http.ResponseWriter, r *http.Request) {
 	domains := []models.Domain{}
-	models.FindAllStruct(&domains, "domains", 0, 10)
-	fmt.Println("Domains: ", domains)
+	models.FindAllStruct(&domains, "domains", 0, 10, "true", "updated DESC")
 
 	servers := []models.Server{}
-	models.FindAllStruct(&servers, "servers", 0, 10)
-	fmt.Println("Servers: ", domains)
+	models.FindAllStruct(&servers, "servers", 0, 300, models.GetIds(domains))
 
 	serializer := models.DomainSerializer{Domains: domains, Servers: servers}
 

@@ -1,6 +1,21 @@
 package main
 
 // func main() {
+// 	resp, err := http.Get("https://www.rapigo.co")
+//
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	defer resp.Body.Close()
+//
+// 	if title, ok, _ := scanner.GetHTMLTitle(resp.Body); ok {
+// 		println(title)
+// 	} else {
+// 		println("Fail to get HTML title")
+// 	}
+// }
+
+// func main() {
 // 	m := models.FindStructBy(models.Domain{}, "domains", []string{"domain"}, []interface{"www.rapigo.co", 1})
 // 	fmt.Println("Domain: ", m)
 // }

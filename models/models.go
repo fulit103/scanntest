@@ -1,23 +1,25 @@
 package models
 
 import (
+	"time"
+
 	_ "github.com/lib/pq"
 )
 
 // Domain encapsula instancia principal
 type Domain struct {
-	ID               string `json:"id,omitempty" db:"id"`
-	ServersChanged   string `json:"servers_changed,omitempty" db:"servers_changed"`
-	SslGrade         string `json:"ssl_grade" db:"ssl_grade"`
-	PreviousSslGrade string `json:"previous_ssl_grade,omitempty" db:"previous_ssl_grade"`
-	Logo             string `json:"logo,omitempty" db:"logo"`
-	Title            string `json:"title,omitempty" db:"title"`
-	IsDown           bool   `json:"is_down,omitempty" db:"is_down"`
-	DomainName       string `json:"domain" db:"domain"`
-	LastCall         string `json:"last_call" db:"last_call"`
-	Created          string `json:"created" db:"created"`
-	Updated          string `json:"updated" db:"updated"`
-	State            string `json:"state" db:"state"` // I : initial processing, P processing, R ready
+	ID               string    `json:"id,omitempty" db:"id"`
+	ServersChanged   string    `json:"servers_changed,omitempty" db:"servers_changed"`
+	SslGrade         string    `json:"ssl_grade" db:"ssl_grade"`
+	PreviousSslGrade string    `json:"previous_ssl_grade,omitempty" db:"previous_ssl_grade"`
+	Logo             string    `json:"logo,omitempty" db:"logo"`
+	Title            string    `json:"title,omitempty" db:"title"`
+	IsDown           bool      `json:"is_down,omitempty" db:"is_down"`
+	DomainName       string    `json:"domain" db:"domain"`
+	LastCall         string    `json:"last_call" db:"last_call"`
+	Created          string    `json:"created" db:"created"`
+	Updated          time.Time `json:"updated" db:"updated"`
+	State            string    `json:"state" db:"state"` // I : initial processing, P processing, R ready
 }
 
 // NewDomain crea una instancia de Domain.

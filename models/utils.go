@@ -105,6 +105,8 @@ func FindAllStruct(dest interface{}, table string, page int, limit int, args ...
 			sql = fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s LIMIT %d OFFSET %d;`, table, where, orderBy, limit, page)
 		}
 
+		fmt.Println(sql)
+
 		rows, err := db.Queryx(sql)
 		if err == nil {
 			for rows.Next() {
@@ -120,4 +122,13 @@ func FindAllStruct(dest interface{}, table string, page int, limit int, args ...
 		return nil
 	}
 	return err
+}
+
+// GetIds get ids
+func GetIds(values []Domain) string {
+	array := []string{}
+	for _, v := range values {
+		array = append(array, v.ID)
+	}
+	return "domain_id in (" + strings.Join(array, ",") + ")"
 }

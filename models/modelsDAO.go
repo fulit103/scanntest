@@ -17,6 +17,11 @@ func (dB *DomainDB) SaveOrUpdate(d Domain, forceUpdateOptional ...bool) {
 	saveOrUpdateStruct(&d, "domains", fields, "domain", forceUpdate)
 }
 
+// Update actualizar datos de un dominio
+func (dB *DomainDB) Update(d Domain, columnas []string) {
+	saveOrUpdateStruct(&d, "domains", columnas, "domain", true)
+}
+
 // FindBy busa un dominio en la base de datos, por el dominio
 func (dB *DomainDB) FindBy(domain string) (Domain, error) {
 	d := NewDomain("")

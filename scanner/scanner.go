@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/fulit103/truoratest/models"
+	whois "github.com/likexian/whois-go"
 )
 
 // ScanerTruora Clase para scanear dominio
@@ -20,13 +21,6 @@ func CallScannDomain(domain models.Domain) {
 	scannDomainTruora.ScannDomain()
 }
 
-// SaveScannedDomain guardar
-func (st *ScanerTruora) saveScannedDomain() {
-	(*st).Domain.State = "R"
-	domainDB := models.DomainDB{}
-	domainDB.SaveOrUpdate((*st).Domain, true)
-}
-
 // ScannDomain Escanea el dominio pasado con ssllibas
 func (st *ScanerTruora) ScannDomain() {
 	bandera := 1
@@ -35,16 +29,20 @@ func (st *ScanerTruora) ScannDomain() {
 	var status interface{}
 	serversSaved := false
 
+	go (*st).getLogo((*st).Domain)
+	go (*st).getTitle((*st).Domain)
+
 	for bandera <= 150 && ready == false {
 		fmt.Println("_______________________")
 		fmt.Println("_______________________")
 		fmt.Println("##### CallSslLabs #####")
-		ready, (*st).DataSslLabs, status, error = CallSslLabs(st.Domain.DomainName)
+		ready, (*st).DataSslLabs, status, error = CallSslLabs((*st).Domain.DomainName)
 
 		fmt.Println("Status: ", status)
 		if status == "IN_PROGRESS" && serversSaved == false {
 			endpoints := (*st).getEndpoints()
 			(*st).saveServers(endpoints)
+			(*st).getServersWhois(endpoints)
 			serversSaved = true
 		}
 
@@ -59,6 +57,10 @@ func (st *ScanerTruora) ScannDomain() {
 		fmt.Println()
 	}
 
+	(*st).Domain.State = "R"
+	(*st).Domain.Updated = time.Now()
+	domainDB := models.DomainDB{}
+
 	if ready == true {
 		//fmt.Println("Data: ", (*st).DataSslLabs)
 
@@ -66,9 +68,10 @@ func (st *ScanerTruora) ScannDomain() {
 		sslGrade := (*st).getServerGrade(endpoints)
 		(*st).Domain.SslGrade = sslGrade
 		(*st).saveServers(endpoints)
-		(*st).saveScannedDomain()
+
+		domainDB.Update((*st).Domain, []string{"state", "ssl_grade", "updated"})
 	} else {
-		(*st).saveScannedDomain()
+		domainDB.Update((*st).Domain, []string{"state", "updated"})
 	}
 }
 
@@ -98,7 +101,9 @@ func (st *ScanerTruora) saveServers(servers []models.Server) {
 		if err != nil {
 			serverDB.SaveOrUpdate(servers[i])
 		} else {
-			s.SslGrade = servers[i].SslGrade
+			if servers[i].SslGrade != "" {
+				s.SslGrade = servers[i].SslGrade
+			}
 			serverDB.SaveOrUpdate(s, true)
 			fmt.Println("Server encontrado: ", s)
 		}
@@ -110,4 +115,42 @@ func (st *ScanerTruora) getServerGrade(servers []models.Server) string {
 		return servers[i].SslGrade
 	}
 	return ""
+}
+
+func (st *ScanerTruora) getTitle(domain models.Domain) {
+	title, err := GetHTMLTitleFromURL("http://" + domain.DomainName)
+	if err == nil {
+		domainDB := models.DomainDB{}
+		domain.Title = title
+		domainDB.Update(domain, []string{"title"})
+		fmt.Println("Title: " + title)
+	}
+}
+
+func (st *ScanerTruora) getLogo(domain models.Domain) {
+	logo, err := GetHTMLLogoFromURL("http://" + domain.DomainName)
+	if err == nil {
+		fmt.Println("Logo: " + logo)
+		domainDB := models.DomainDB{}
+		domain.Logo = logo
+		domainDB.Update(domain, []string{"logo"})
+	}
+}
+
+func (st *ScanerTruora) getServersWhois(servers []models.Server) {
+	for _, s := range servers {
+		go (*st).getWhois(s)
+	}
+}
+
+func (st *ScanerTruora) getWhois(server models.Server) {
+	result, err := whois.Whois(server.Address)
+	if err == nil {
+		fmt.Println("-----")
+		name, _ := getWhoisField(result, "OrgName:")
+		fmt.Println("OrgName: ", name)
+		contry, _ := getWhoisField(result, "Country:")
+		fmt.Println("Contry: ", contry)
+		fmt.Println("-----")
+	}
 }
