@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/fulit103/truoratest/models"
 	"github.com/fulit103/truoratest/scanner"
@@ -20,7 +21,8 @@ func InfoDomainEndPoint(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		if d.State == "R" {
 			d.State = "P"
-			domainDB.Update(d, []string{"state"})
+			d.Updated = time.Now()
+			domainDB.Update(d, []string{"state", "updated"})
 			go scanner.CallScannDomain(d)
 		} else {
 			fmt.Println("Ya esta ejecutandose el proceso")

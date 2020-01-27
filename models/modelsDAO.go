@@ -63,3 +63,8 @@ func (sS *ServerDB) FindAllBy(domainID string) []Server {
 	FindAllStruct(&servers, "servers", 0, 10, fmt.Sprintf("domain_id=%s", domainID))
 	return servers
 }
+
+// Update actualizar datos de un server
+func (sS *ServerDB) Update(s Server, columnas []string) {
+	saveOrUpdateStruct(&s, "servers", columnas, "id", true)
+}

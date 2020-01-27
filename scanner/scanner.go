@@ -146,11 +146,14 @@ func (st *ScanerTruora) getServersWhois(servers []models.Server) {
 func (st *ScanerTruora) getWhois(server models.Server) {
 	result, err := whois.Whois(server.Address)
 	if err == nil {
-		fmt.Println("-----")
-		name, _ := getWhoisField(result, "OrgName:")
-		fmt.Println("OrgName: ", name)
-		contry, _ := getWhoisField(result, "Country:")
-		fmt.Println("Contry: ", contry)
-		fmt.Println("-----")
+		name, _ := getWhoisField(result, "owner")
+		country, _ := getWhoisField(result, "country")
+		serverBD := models.ServerDB{}
+		s, err := serverBD.FindBy(server.Address, server.DomainID)
+		if err == nil {
+			s.Country = country
+			s.Owner = name
+			serverBD.Update(s, []string{"country", "owner"})
+		}
 	}
 }
