@@ -1,18 +1,17 @@
 package main
 
-import (
-	"fmt"
+// func main() {
+// 	m := models.FindStructBy(models.Domain{}, "domains", []string{"domain"}, []interface{"www.rapigo.co", 1})
+// 	fmt.Println("Domain: ", m)
+// }
 
-	"github.com/fulit103/truoratest/models"
-)
-
-func main() {
-	// models := models.FindStrucAll(models.Domain{}, "domains", 1, 10).([10]models.Domain)
-	// fmt.Println(models)
-	data := []models.Domain{}
-	models.FindAllStruct(&data, "domains", 0, 10)
-	fmt.Println(data)
-}
+// func main() {
+// 	// models := models.FindStrucAll(models.Domain{}, "domains", 1, 10).([10]models.Domain)
+// 	// fmt.Println(models)
+// 	data := []models.Domain{}
+// 	models.FindAllStruct(&data, "domains", 0, 10)
+// 	fmt.Println(data)
+// }
 
 // import (
 // 	"fmt"

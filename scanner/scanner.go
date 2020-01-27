@@ -11,7 +11,6 @@ import (
 // ScanerTruora Clase para scanear dominio
 type ScanerTruora struct {
 	Domain      models.Domain
-	Servers     []models.Server
 	DataSslLabs map[string]interface{}
 }
 
@@ -23,8 +22,9 @@ func CallScannDomain(domain models.Domain) {
 
 // SaveScannedDomain guardar
 func (st *ScanerTruora) saveScannedDomain() {
-	st.Domain.State = "R"
-	models.SaveOrUpdateDomain((*st).Domain, true)
+	(*st).Domain.State = "R"
+	domainDB := models.DomainDB{}
+	domainDB.SaveOrUpdate((*st).Domain, true)
 }
 
 // ScannDomain Escanea el dominio pasado con ssllibas
@@ -33,12 +33,20 @@ func (st *ScanerTruora) ScannDomain() {
 	ready := false
 	var error error
 	var status interface{}
+	serversSaved := false
 
 	for bandera <= 150 && ready == false {
+		fmt.Println("_______________________")
+		fmt.Println("_______________________")
 		fmt.Println("##### CallSslLabs #####")
 		ready, (*st).DataSslLabs, status, error = CallSslLabs(st.Domain.DomainName)
 
 		fmt.Println("Status: ", status)
+		if status == "IN_PROGRESS" && serversSaved == false {
+			endpoints := (*st).getEndpoints()
+			(*st).saveServers(endpoints)
+			serversSaved = true
+		}
 
 		if error != nil {
 			log.Println(error)
@@ -47,88 +55,59 @@ func (st *ScanerTruora) ScannDomain() {
 		bandera = bandera + 1
 
 		time.Sleep(time.Second * 10)
+		fmt.Println()
+		fmt.Println()
 	}
 
 	if ready == true {
-		fmt.Println("Data: ", (*st).DataSslLabs)
+		//fmt.Println("Data: ", (*st).DataSslLabs)
+
+		endpoints := (*st).getEndpoints()
+		sslGrade := (*st).getServerGrade(endpoints)
+		(*st).Domain.SslGrade = sslGrade
+		(*st).saveServers(endpoints)
 		(*st).saveScannedDomain()
-		(*st).processServers()
-		// preprocessServers(data, domain)
+	} else {
+		(*st).saveScannedDomain()
 	}
 }
 
-func (st *ScanerTruora) processServers() {
-	fmt.Println("###Preprocesing###")
+func (st *ScanerTruora) getEndpoints() []models.Server {
+	endpoints := []models.Server{}
 	servers := (*st).DataSslLabs["endpoints"].([]interface{})
-	for i, u := range servers {
-		fmt.Println(i, u)
+	for i := range servers {
+		//fmt.Println("Server endpoint: ", i, u)
+		u := servers[i]
 		serverJSON := u.(map[string]interface{})
-		server := models.NewServer(serverJSON["ipAddress"].(string))
-
-		server.DomainID = (*st).Domain.ID
-		err := models.FindStructBy(&server, "servers", "address", server.Address)
-
-		if err != nil { //no lo encontro
-			//Crearlo //si estado dominio esta en I primer escaneo, si esta en P lleva varios escaneos (servers_changed true)
-			fmt.Println(server.Address)
-			(*st).Servers = append((*st).Servers, server)
-			models.SaveOrUpdateServer(server)
-		} else {
-			//Si lo encontro, imprimirlo
-			(*st).Servers = append((*st).Servers, server)
-			fmt.Println(server)
+		ipAddress := serverJSON["ipAddress"].(string)
+		server := models.NewServer(ipAddress)
+		if serverJSON["grade"] != nil {
+			server.SslGrade = serverJSON["grade"].(string)
 		}
-
+		server.DomainID = (*st).Domain.ID
+		endpoints = append(endpoints, server)
+		fmt.Println("Server Add: ", server)
 	}
-	fmt.Println("###EndPreprocesing###")
+	return endpoints
 }
 
-// if status == "IN_PROGRESS" {
-// 	//fmt.Println("Guardar todos los servers")
-// 	//ciclo y guardar
-// }
+func (st *ScanerTruora) saveServers(servers []models.Server) {
+	serverDB := models.ServerDB{}
+	for i := range servers {
+		s, err := serverDB.FindBy(servers[i].Address, servers[i].DomainID)
+		if err != nil {
+			serverDB.SaveOrUpdate(servers[i])
+		} else {
+			s.SslGrade = servers[i].SslGrade
+			serverDB.SaveOrUpdate(s, true)
+			fmt.Println("Server encontrado: ", s)
+		}
+	}
+}
 
-// func preprocessServers(data map[string]interface{}, domain models.Domain) {
-// 	fmt.Println("###Preprocesing###")
-// 	servers := data["endpoints"].([]interface{})
-// 	for i, u := range servers {
-// 		fmt.Println(i, u)
-// 		server := u.(map[string]interface{})
-// 		s := models.NewServer(server["ipAddress"].(string))
-// 		s.DomainID = domain.ID
-// 		err := models.FindStructBy(&s, "servers", "address", s.Address)
-// 		if err != nil { //no lo encontro
-// 			//Crearlo //si estado dominio esta en I primer escaneo, si esta en P lleva varios escaneos (servers_changed true)
-// 			fmt.Println(s.Address)
-// 			models.SaveOrUpdateServer(s)
-// 		} else {
-// 			//Si lo encontro, imprimirlo
-// 			fmt.Println(s)
-// 		}
-//
-// 	}
-// 	fmt.Println("###EndPreprocesing###")
-// }
-
-// fmt.Println("---------")
-// fmt.Println(m)
-// fmt.Println("---------")
-// fmt.Println("#########")
-// fmt.Println(m["status"])
-// fmt.Println("#########")
-
-// for k, v := range m {
-//     switch vv := v.(type) {
-//     case string:
-//         fmt.Println(k, "is string", vv)
-//     case float64:
-//         fmt.Println(k, "is float64", vv)
-//     case []interface{}:
-//         fmt.Println(k, "is an array:")
-//         for i, u := range vv {
-//             fmt.Println(i, u)
-//         }
-//     default:
-//         fmt.Println(k, "is of a type I don't know how to handle")
-//     }
-// }
+func (st *ScanerTruora) getServerGrade(servers []models.Server) string {
+	for i := range servers {
+		return servers[i].SslGrade
+	}
+	return ""
+}

@@ -65,11 +65,11 @@ func saveOrUpdateStruct(object interface{}, table string, fields []string, pk st
 }
 
 // FindStructBy find
-func FindStructBy(object interface{}, table string, field string, value string) error {
+func FindStructBy(object interface{}, table string, where string) error {
 	db, err := connect()
 
 	if err == nil {
-		sql := fmt.Sprintf(`SELECT * FROM %s WHERE %s='%s' `, table, field, value)
+		sql := fmt.Sprintf(`SELECT * FROM %s WHERE %s `, table, where)
 		fmt.Println("SQL: ", sql)
 		rows, _ := db.Queryx(sql)
 		for rows.Next() {
@@ -84,14 +84,26 @@ func FindStructBy(object interface{}, table string, field string, value string) 
 }
 
 // FindAllStruct listar todos los elementos de una tabla
-func FindAllStruct(dest interface{}, table string, page int, limit int) error {
+func FindAllStruct(dest interface{}, table string, page int, limit int, args ...string) error {
 	db, err := connect()
+
+	where := "true"
+	orderBy := ""
+	if len(args) == 1 {
+		where = args[0]
+	}
+	if len(args) == 2 {
+		orderBy = args[1]
+	}
 
 	if err == nil {
 		arr := reflect.ValueOf(dest).Elem()
 		v := reflect.New(reflect.TypeOf(dest).Elem().Elem())
 
-		sql := fmt.Sprintf(`SELECT * FROM %s LIMIT %d OFFSET %d;`, table, limit, page)
+		sql := fmt.Sprintf(`SELECT * FROM %s WHERE %s LIMIT %d OFFSET %d;`, table, where, limit, page)
+		if orderBy != "" {
+			sql = fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s LIMIT %d OFFSET %d;`, table, where, orderBy, limit, page)
+		}
 
 		rows, err := db.Queryx(sql)
 		if err == nil {
