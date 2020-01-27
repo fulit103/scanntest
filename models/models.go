@@ -42,7 +42,7 @@ type Server struct {
 	SslGrade string `json:"ssl_grade,omitempty" db:"ssl_grade"`
 	Country  string `json:"country,omitempty" db:"country"`
 	Owner    string `json:"owner,omitempty" db:"owner"`
-	InUse    bool   `json:"in_use,omitempty"`
+	InUse    bool   `json:"in_use,omitempty" db:"in_use"`
 	DomainID string `json:"domain,omitempty" db:"domain_id"`
 	Created  string `json:"created" db:"created"`
 	Updated  string `json:"updated" db:"updated"`

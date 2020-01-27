@@ -4,13 +4,17 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/fulit103/truoratest/models"
 	"github.com/fulit103/truoratest/routes"
 	"github.com/go-chi/chi"
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	fmt.Println("Hola mundo")
+	fmt.Println("init Server")
+
+	models.InitDB()
+
 	r := chi.NewRouter()
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {

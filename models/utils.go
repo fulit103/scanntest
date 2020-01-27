@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"reflect"
 	"strings"
 
@@ -11,9 +12,11 @@ import (
 )
 
 func connect() (*sqlx.DB, error) {
-	//addr := os.Getenv("DB")
-	//fmt.Println("Postgres addr: " + addr)
-	db, err := sqlx.Connect("postgres", "postgresql://root@0.0.0.0:26257/truora?sslmode=disable")
+	addr := os.Getenv("DB")
+	if addr == "" {
+		addr = "postgresql://root@0.0.0.0:26257/truora?sslmode=disable"
+	}
+	db, err := sqlx.Connect("postgres", addr)
 	if err != nil {
 		fmt.Println("Could not connect...")
 	} else {
