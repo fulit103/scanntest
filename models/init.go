@@ -1,7 +1,7 @@
 package models
 
 var schema = `
-CREATE TABLE domains (
+CREATE TABLE IF NOT EXISTS domains (
   id SERIAL PRIMARY KEY,
   domain varchar(30) NOT NULL,
   ssl_grade varchar(3) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE domains (
 
 );
 
-CREATE TABLE servers (
+CREATE TABLE  IF NOT EXISTS servers (
   id SERIAL PRIMARY KEY,
   address varchar(30) NOT NULL,
   ssl_grade varchar(3) NOT NULL,

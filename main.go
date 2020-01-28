@@ -25,5 +25,5 @@ func main() {
 
 	r.Get("/domains", routes.ListDomainsEndPoint)
 
-	http.ListenAndServe(":3000", r)
+	http.ListenAndServe(":4000", r)
 }

@@ -9,8 +9,9 @@ services:
     command: sh run.sh
     ports:
       - 80:3000
+      - 81:4000
     environment:
-      - A=1
+      - DB_URL=postgresql://root@db:26257/defaultdb?sslmode=disable
 
   db:
     image: cockroachdb/cockroach:v19.2.2
